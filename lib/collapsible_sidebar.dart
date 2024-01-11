@@ -32,6 +32,8 @@ class CollapsibleSidebar extends StatefulWidget {
     this.iconSize = 40,
     this.customContentPaddingLeft = -1,
     this.toggleButtonIcon = Icons.chevron_right,
+    this.onTapToggled,
+    this.onToggleChanged,
     this.backgroundColor = const Color(0xff2B3138),
     this.avatarBackgroundColor = const Color(0xff6A7886),
     this.selectedIconBox = const Color(0xff2F4047),
@@ -90,6 +92,8 @@ class CollapsibleSidebar extends StatefulWidget {
       screenPadding,
       customContentPaddingLeft;
   final IconData toggleButtonIcon;
+  final Function? onTapToggled;
+  final Function(bool)? onToggleChanged;
   final Color backgroundColor,
       avatarBackgroundColor,
       selectedIconBox,
@@ -160,6 +164,12 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar>
       setState(() {});
     });
 
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        if (widget.onToggleChanged != null) widget.onToggleChanged!(!_isCollapsed);
+      }
+    });
+
     _isCollapsed = widget.isCollapsed;
     var endWidth = _isCollapsed ? widget.minWidth : tempWidth;
     _animateTo(endWidth);
@@ -197,43 +207,11 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar>
     _controller.forward();
   }
 
-  void _onHorizontalDragUpdate(DragUpdateDetails details) {
-    if (details.primaryDelta != null) {
-      if (Directionality.of(context) == TextDirection.ltr) {
-        _currWidth += details.primaryDelta!;
-      } else {
-        _currWidth -= details.primaryDelta!;
-      }
-      if (_currWidth > tempWidth)
-        _currWidth = tempWidth;
-      else if (_currWidth < widget.minWidth)
-        _currWidth = widget.minWidth;
-      else
-        setState(() {});
-    }
-  }
-
-  void _onHorizontalDragEnd(DragEndDetails _) {
-    if (_currWidth == tempWidth)
-      setState(() => _isCollapsed = false);
-    else if (_currWidth == widget.minWidth)
-      setState(() => _isCollapsed = true);
-    else {
-      var threshold = _isCollapsed ? _delta1By4 : _delta3by4;
-      var endWidth = _currWidth - widget.minWidth > threshold
-          ? tempWidth
-          : widget.minWidth;
-      _animateTo(endWidth);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     Widget sidebar = Padding(
       padding: EdgeInsets.all(widget.screenPadding),
       child: GestureDetector(
-        onHorizontalDragUpdate: _onHorizontalDragUpdate,
-        onHorizontalDragEnd: _onHorizontalDragEnd,
         child: CollapsibleContainer(
           height: widget.height,
           width: _currWidth,
@@ -456,6 +434,7 @@ class _CollapsibleSidebarState extends State<CollapsibleSidebar>
         _isCollapsed = !_isCollapsed;
         var endWidth = _isCollapsed ? widget.minWidth : tempWidth;
         _animateTo(endWidth);
+        if (widget.onTapToggled != null) widget.onTapToggled!();
       },
     );
   }

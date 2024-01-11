@@ -176,12 +176,17 @@ class _SidebarPageState extends State<SidebarPage> {
     ];
   }
 
+  bool isCollapsed = true;
+
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     return SafeArea(
       child: CollapsibleSidebar(
-        isCollapsed: MediaQuery.of(context).size.width <= 800,
+        onToggleChanged: (value) {
+          print('sidebar opened: $value');
+        },
+        isCollapsed: isCollapsed,
         items: _items,
         collapseOnBodyTap: false,
         avatarImg: _avatarImg,
@@ -191,7 +196,32 @@ class _SidebarPageState extends State<SidebarPage> {
               SnackBar(content: Text('Yay! Flutter Collapsible Sidebar!')));
         },
         iconSize: 40,
-        body: _body(size, context),
+
+        onTapToggled: () {
+          setState(() {
+            isCollapsed = !isCollapsed;
+          });
+          print('trest sidebar is collapse: $isCollapsed');
+        },
+        body:
+        Container(
+          color: Colors.black,
+          padding: const EdgeInsets.all(20),
+          alignment: Alignment.centerRight,
+          child:
+        AnimatedContainer(
+          width: isCollapsed ? size.width : size.width -310,
+          height: size.height,
+          curve: Curves.fastLinearToSlowEaseIn,
+
+          duration: const Duration(milliseconds: 500),
+          color: Colors.green,
+          child: Text(
+            _headline,
+            style: Theme.of(context).textTheme.headline1,
+            textAlign: TextAlign.center,
+          ),
+        ),),
         backgroundColor: Colors.black,
         selectedTextColor: Colors.limeAccent,
         textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
